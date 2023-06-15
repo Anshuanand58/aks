@@ -1,31 +1,26 @@
-module "aks-ci-ecom-dev-ord-02" {
-  source                = "git::https://xkmjl6xcuanap5betn3m43lagh5y6llpn6lq5bqfpaxep7cynvca@dev.azure.com/IRL-INFRA-DEVOPS/IRL-MODULES/_git/IRL-MODULES//azurerm_kubernetes_services"
+module "test-aks" {
+  source                = "location of your code"
   kubernetes_version    = "1.25.6"
   create_resource_group = false
-  resource_group_name   = "rsg-ci-ecom-dev-ord-02"
-  node_resource_group   = "aks-ci-ecom-dev-ord-inf-mgrg-01"
-  #nodepool_enable_auto_scaling = true
-  cluster_name = "aks-ci-ecom-dev-ord-02"
-  dns_prefix   = "aks-ci-ecom-dev-ord-02"
-  #os_disk_type                = "Managed"
-  akv_user_identity         = "mi-ci-ecom-dev-crt-01"
-  vnet_name                 = "vnt-ci-ecom-dev-spk-01"
-  subnet_name               = "snt-ci-ecom-dev-crt-aks-01"
-  vnet_rg_name              = "rsg-ci-ecom-dev-net-01"
+  resource_group_name   = "test-rg"
+  node_resource_group   = "test-managed-rg-01"
+  cluster_name = "test-aks"
+  dns_prefix   = "test-aks"
+  akv_user_identity         = "test-aks-mi"
+  vnet_name                 = "test-aks-vnet"
+  subnet_name               = "test-aks-snt"
+  vnet_rg_name              = "test-rg"
   create_container_registry = true
   pod_cidr = "10.245.0.0/16"
-  # service_cidr              = "192.168.0.0/16"
-  # dns_service_ip            = "192.168.0.10"
-  # docker_bridge_cidr        = "192.168.1.1/16"
   acr = {
     "acr1" = {
-      name = "acrciecomdevord02"
+      name = "test-acr"
       sku  = "Standard"
     }
   }
   attach_usernodepool               = true
-  network_profile_load_balancer_sku = "standard" #default
-  network_profile_network_plugin    = "kubenet"  #default
+  network_profile_load_balancer_sku = "standard" 
+  network_profile_network_plugin    = "kubenet"  
   nodepool = {
     "pool1" = {
       name                = "nodepool1"
@@ -181,13 +176,6 @@ module "aks-ci-ecom-dev-ord-02" {
   }
   location = "centralindia" #default
   tags = {
-    application        = "Order Service"
-    Application_Name   = ""
-    Application_Owner  = ""
-    Env                = ""
-    environment        = "dev"
-    IRL-business-owner = "Abhiraj Anand"
-    Resource_Owner     = ""
-    tower              = "Ecom"
-  }
+    application        = "test"
+
 }
