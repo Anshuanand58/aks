@@ -26,6 +26,11 @@ resource "azurerm_container_registry" "acr" {
   resource_group_name = local.resource_group_name
   location            = local.location
   sku                 = each.value["sku"]
+  admin_enabled       = var.admin_enabled
+  lifecycle {
+    ignore_changes = [admin_enabled]
+  }
+ tags = var.tags
 }
 
 # Create a Subnet for AKS
@@ -60,19 +65,21 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   dynamic "default_node_pool" {
     for_each = var.nodepool
     content {
-      name                = default_node_pool.value["name"]
-      enable_auto_scaling = default_node_pool.value["enable_auto_scaling"]
-      max_count           = default_node_pool.value["max_count"]
-      min_count           = default_node_pool.value["min_count"]
-      node_count          = default_node_pool.value["node_count"]
-      vm_size             = default_node_pool.value["vm_size"]
-      os_disk_type        = default_node_pool.value["os_disk_type"]
-      zones               = default_node_pool.value["zones"]
-      type                = default_node_pool.value["type"]
-      ultra_ssd_enabled   = default_node_pool.value["ultra_ssd_enabled"]
-      os_disk_size_gb     = default_node_pool.value["os_disk_size_gb"]
-      vnet_subnet_id      = data.azurerm_subnet.aks-subnet.id
-      node_labels         = default_node_pool.value["agents_labels"]
+      name                        = default_node_pool.value["name"]
+      enable_auto_scaling         = default_node_pool.value["enable_auto_scaling"]
+      max_count                   = default_node_pool.value["max_count"]
+      min_count                   = default_node_pool.value["min_count"]
+      node_count                  = default_node_pool.value["node_count"]
+      vm_size                     = default_node_pool.value["vm_size"]
+      os_disk_type                = default_node_pool.value["os_disk_type"]
+      zones                       = default_node_pool.value["zones"]
+      type                        = default_node_pool.value["type"]
+      ultra_ssd_enabled           = default_node_pool.value["ultra_ssd_enabled"]
+      os_disk_size_gb             = default_node_pool.value["os_disk_size_gb"]
+      vnet_subnet_id              = data.azurerm_subnet.aks-subnet.id
+      node_labels                 = default_node_pool.value["agents_labels"]
+      max_pods                    = default_node_pool.value["max_pods"]
+      temporary_name_for_rotation = default_node_pool.value["temporary_name_for_rotation"]
     }
   }
   identity {
@@ -82,13 +89,20 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   network_profile {
     load_balancer_sku = var.network_profile_load_balancer_sku
     network_plugin    = var.network_profile_network_plugin
-    pod_cidr          = var.pod_cidr
     # service_cidr      = var.service_cidr
-    # dns_service_ip    = var.dns_service_ip
+    # dns_service_ip    = var.dns_service_ipsss
   }
-
+  linux_profile {
+    admin_username = var.admin_username
+    ssh_key {
+      key_data = var.key_data
+    }
+  }
   tags       = var.tags
   depends_on = [azurerm_role_assignment.akv_role]
+  lifecycle {
+    ignore_changes = [linux_profile, tags]
+  }
 }
 data "azurerm_client_config" "current" {
 }
@@ -120,6 +134,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "cardvault" {
   zones                 = each.value["zones"]
   node_labels           = each.value["node_labels"]
   node_taints           = each.value["node_taints"]
-  # type                  = each.value["type"]
-  vnet_subnet_id = data.azurerm_subnet.aks-subnet.id
+  vnet_subnet_id        = data.azurerm_subnet.aks-subnet.id
+  os_disk_size_gb       = each.value["os_disk_size_gb"]
+  max_pods              = each.value["max_pods"]
+  mode                  = each.value["mode"]
+  # temporary_name_for_rotation = each.value["temporary_name_for_rotation"]
 }
